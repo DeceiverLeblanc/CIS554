@@ -1,0 +1,99 @@
+//HW1 by Yichen Liang
+//SU Net ID: yliang07  SUID: 455360570
+#include <iostream>
+using namespace std;
+
+class Node {
+public:
+	int value;
+	Node* next;
+	Node(int i) { value = i; next = nullptr; }
+	Node() { next = nullptr; }
+};
+
+class LinkedList {
+public:
+	Node* head;
+	LinkedList() { head = nullptr; }
+	LinkedList(int m, int n);
+	void print();
+	void group();
+	void bubbleSort();
+};
+LinkedList::LinkedList(int n, int m) {
+	head = nullptr;
+	for (int i = 0; i < n; ++i) {
+		Node* p1 = new Node{ rand() % m };
+		p1->next = head;
+		head = p1;
+	}
+}
+
+void LinkedList::print() {
+	Node* p1{ head };
+	while (p1) {//while (p1 != nullptr)
+		cout << p1->value << " ";
+		p1 = p1->next;
+	}
+}
+
+void LinkedList::group() {
+	if (!head || !head->next) return;
+	Node* p1 = head;
+	Node* p2{ p1->next };
+	Node* p3{ p2->next };
+	while (p1) {
+		while (p3) {
+			if (p1->value == p3->value) {
+				p2->next = p3->next;
+				p3->next = p1->next;
+				p1->next = p3;
+				p1 = p1->next;
+				p2 = p1->next;
+				p3 = p2->next;
+				continue;
+
+			}
+			else {
+				p2 = p2->next;
+				p3 = p3->next;
+			}
+		}
+		p1 = p1->next;
+		if(p1)p2 = p1->next;
+		if(p2)p3 = p2->next;
+	}
+}
+void LinkedList::bubbleSort() {
+	if (!head || !head->next) return;
+	Node* p1 = head;
+	Node* p2 = p1->next;
+	Node* flag = nullptr;
+	while (p2 != flag) {
+		while (p2) {
+			if (p1->value > p2->value) {
+				swap(p2->value, p1->value);
+			}
+			p1 = p1->next;
+			p2 = p2->next;
+			if (p2 == flag) break;
+		}
+		flag = p1;
+		p1 = head;
+		p2 = p1->next;
+	}
+}
+int main() {
+	LinkedList L1(50, 20);
+	L1.print();
+	cout << endl;
+	L1.group();
+	L1.print();
+	cout << endl;
+	LinkedList L2(55, 25);
+	L2.print();
+	cout << endl;
+	L2.bubbleSort();
+	L2.print();
+	return 0;
+}

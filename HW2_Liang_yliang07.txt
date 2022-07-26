@@ -1,0 +1,163 @@
+//HW2 by Yichen Liang
+//SU Net ID: yliang07  SUID: 455360570
+#include <iostream>
+using namespace std;
+
+class node {//for doubly linked list; double linked list
+public:
+	int value;
+	node* next;
+	node* previous;
+	node(int i) { value = i; next = previous = nullptr; }
+	node() { next = previous = nullptr; }
+
+};
+
+
+class DLinkedList {
+public:
+	node* head;
+	node* tail;
+	DLinkedList(int n, int m);//n nodes with random values in 0 ...m-1
+	void print_F();
+	void print_B();
+	void sort();
+	void removeAll(int k);
+};
+
+
+DLinkedList::DLinkedList(int n, int m) {
+	for (int i = 0; i < n; ++i) {
+		node* p1 = new node(rand() % m);
+		if (!head) {//empty DLinkedList
+			head = tail = p1;
+		}
+		else {
+			p1->previous = tail;
+			tail->next = p1;
+			tail = p1;
+		}
+	}
+}
+
+
+void DLinkedList::print_F() {
+	node* p1{ head };
+	while (p1) {
+		cout << p1->value << " ";
+		p1 = p1->next;
+	}
+}
+void DLinkedList::print_B() {
+	node* p1{ tail };
+	while (p1) {
+		cout << p1->value << " ";
+		p1 = p1->previous;
+	}
+}
+
+void DLinkedList::sort() {
+	if (!head || !head->next) return;
+	node* min = head;
+	node* p = head;
+	node* sorted = nullptr;
+	while (p) {
+		min = p;
+		while (p) {
+			if (p->value < min->value) min = p;
+			p = p->next;
+		}
+		if (min == head&&!sorted) {
+			sorted = min;
+			continue;
+		}
+		else {
+			min->previous->next = min->next;
+			if (min->next) min->next->previous = min->previous;
+			min->previous = sorted;
+			if (!sorted) {
+				min->next = head;
+				min->previous = nullptr;
+				min->next->previous = min;
+			}
+			else {
+				min->next = sorted->next;
+				sorted->next = min;
+				if (min->next) min->next->previous = min;
+			}
+			sorted = min;
+			p = sorted->next;
+		}
+	}
+	node* pointer = tail;
+	while (pointer->previous) {
+		pointer = pointer->previous;
+	}
+	head = pointer;
+
+	while (pointer->next) {
+		pointer = pointer->next;
+	}
+	tail = pointer;
+	
+
+}
+
+void DLinkedList::removeAll(int k) {
+	if (!head) return;
+	node* p = head;
+	node* deleted = nullptr;
+	while (p) {
+		if (p->value == k) {
+			if (p->previous) {
+				p->previous->next = p->next;
+			}
+			if (p->next) {
+				p->next->previous = p->previous;
+			}
+			deleted = p;
+
+			if (p == head) {
+				p = p->next;
+				head = p;
+			}
+			else {
+				p = p->next;
+			}
+			delete deleted;
+			continue;
+		}
+		p=p->next;
+	}
+	node* pointer = head;
+	if (head) {
+		while (pointer->next) {
+			pointer = pointer->next;
+		}
+		tail = pointer;
+	}
+
+}
+
+
+int main() {
+	DLinkedList DL1{ 20, 10 };
+	DL1.print_F();
+	cout << endl;
+	DL1.print_B();
+	cout << endl;
+
+	DL1.removeAll(5);
+	DL1.print_F();
+	cout << endl;
+	DL1.print_B();
+	cout << endl;
+
+	DL1.sort();
+	DL1.print_F();
+	cout << endl;
+	DL1.print_B();
+	cout << endl;
+
+	return 0;
+}

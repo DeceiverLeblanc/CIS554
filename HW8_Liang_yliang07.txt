@@ -1,0 +1,183 @@
+//HW8 by Yichen Liang
+//SU Net ID: yliang07  SUID: 455360570
+#include<iostream>
+#include<fstream>
+#include<cmath>
+#include<map>
+#include<vector>
+#include <unordered_map>
+#include <algorithm>
+#include <string>
+using namespace std;
+class Circuit {
+public:
+	string name;
+	map<vector<int>, vector<int>> table;
+	vector<int> row_sum;
+	int column_number;
+	int input_number;
+	vector<int> output_column;
+	Circuit(string name) :name(name) {}
+	void column_set();
+
+};
+class myhash {
+public:
+	int operator()(const Circuit& c) const {
+		int sum{ 0 };
+		//hash<int> h1;
+		for (auto& i : c.row_sum) sum += i;
+		return hash<int>{}(sum);//hash<int>{} an anonymous hash function
+		//return h1(sum);
+	}
+	bool operator()(const Circuit& c1, const Circuit& c2) const {
+		return( c1.output_column == c2.output_column) && (c1.row_sum == c2.row_sum);
+	}
+};
+
+
+void Circuit::column_set() {
+	for (int a = 0; a < column_number; a++) {
+		int sum = 0;
+		for (auto& i : table) {
+			sum+=i.second[a];
+		}
+		output_column.push_back(sum);
+
+	}
+	sort(output_column.begin(), output_column.end());
+}
+
+void Add(unordered_map<Circuit, string*, myhash, myhash>& DB, const Circuit& C);
+void Find(unordered_map<Circuit, string*, myhash, myhash>& DB, const Circuit& C);
+void Delete(unordered_map<Circuit, string*, myhash, myhash>& DB, const Circuit& C);
+
+ostream& operator<<(ostream& str, const Circuit&c) {
+	str << c.name << endl;
+	str << c.input_number << endl;
+	str << c.column_number << endl;
+	for (auto& i : c.table) {
+		for (auto &i2:i.first) {
+			str << i2;
+		}
+		str << " ";
+		for (auto& i3 : i.second) {
+			str << i3;
+		}
+		str << endl;
+	}
+	return str;
+}
+
+
+int main() {
+	unordered_map<Circuit,string*,myhash,myhash> DB;
+	ifstream  Fin("input.txt");
+	int operation_num = 0;
+	string input_string;
+	Fin >> operation_num;
+	string operation;
+	string name;
+	int input_number;
+	int output_number;
+	while (operation_num != 0) {
+		Fin >> operation;
+		Fin >> name;
+		Fin >> input_number;
+		Fin >> output_number;
+		Circuit temp(name);
+		temp.column_number = output_number;
+		temp.input_number = input_number;
+		string buffer;
+		vector<int> v;
+		vector<int> v2;
+		int sum;
+		for (int i = 1; i < pow(2, input_number); i++) {
+			v.clear();
+			v2.clear();
+			buffer.clear();
+		    sum = 0;
+			Fin >> buffer;
+			for (int i = 0; i < buffer.size(); i++) {
+				sum += buffer[i] - '0';
+			}
+			temp.row_sum.push_back(sum);
+			for (int i = 0; i < input_number; i++) {
+				v2.push_back((buffer[i] - '0'));
+			}
+			for (int i = input_number; i < buffer.size(); i++) {
+				v.push_back((buffer[i]-'0'));
+			}
+			temp.table.insert(make_pair(v2, v));
+		}
+		sort(temp.row_sum.begin(),temp.row_sum.end());
+		temp.column_set();
+		if (operation == "Add") {
+			Add(DB, temp);
+		}
+		else if (operation == "Find") {
+			Find(DB, temp);
+		}
+		else if (operation == "Delete") {
+			Delete(DB, temp);
+		}
+
+		operation_num--;
+	}
+
+
+
+	return 0;
+}
+void Add(unordered_map<Circuit, string*, myhash, myhash>& DB, const Circuit& C){
+	bool flag = false;
+	for (auto& i : DB) {
+		if (i.first.row_sum == C.row_sum && i.first.output_column == C.output_column) {
+			cout << C.name<<"is not added." << "It has a re - useable circuit," << i.first.name << ",in the database, whose truth table is shown below." << endl;
+			cout << i.first;
+			flag = true;
+			break;
+		}
+	}
+	if (flag == false) {
+		string* name = new string(C.name);
+		DB.insert(make_pair(C, name));
+		cout << C.name << " is added to the database" << endl;
+	}
+
+
+}
+void Find(unordered_map<Circuit, string*, myhash, myhash>& DB, const Circuit& C) {
+	bool flag = false;
+	for (auto& i : DB) {
+		if (i.first.row_sum == C.row_sum && i.first.output_column == C.output_column) {
+			cout << C.name << " has a re - useable circuit," << i.first.name << ",in the database, whose truth table is shown below." << endl;
+			cout << i.first;
+			flag= true;
+			break;
+		}
+	}
+	if (flag == false) {
+		cout << C.name<<" does not have any re-useable circuit in the database" << endl;
+	}
+
+}
+void Delete(unordered_map<Circuit, string*, myhash, myhash>& DB, const Circuit& C) {
+	bool flag = false;
+	for (auto& i : DB) {
+		if (i.first.row_sum == C.row_sum && i.first.output_column == C.output_column) {
+			cout << C.name << " has a re - useable circuit," << i.first.name << ",in the database, whose truth table is shown below and "<<i.first.name<<" is deleted from the database." << endl;
+			cout << i.first;
+			DB.erase(i.first);
+			flag = true;
+			break;
+		}
+	}
+	if (flag == false) {
+		cout << C.name << " does not have any re-useable circuit in the database." << endl;
+	}
+
+
+
+
+}

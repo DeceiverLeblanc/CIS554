@@ -1,0 +1,167 @@
+//HW4 by Yichen Liang
+//SU Net ID: yliang07  SUID: 455360570
+#include <iostream>
+#include <map>
+
+
+using namespace std;
+
+
+class course {
+public:
+	string name;
+	int section;
+	int credits;
+	string grade;
+	course() {}
+	course(string n, int s, int c, string g) { name = n; section = s; credits = c; grade = g; }
+};
+
+
+template <class T> class Record {
+public:
+	map<int, map<int, T*>*> Data;
+	Record() { }
+	Record(const initializer_list < pair<int, initializer_list<pair <int, T>>>>& I);
+	Record(const Record<T>& R);//Copy Constructor
+	void operator=(const Record<T>& R);//Copy Assignment
+	~Record();//Destructor
+	Record<T> deleteFirst();//DeleteFirst
+	Record(Record<T>&& R);//Move Constructor
+	void operator=(Record<T>&& R);//Move Assignment
+};
+
+template <class T> void Record<T>::operator=(Record<T>&& R) {//Move Assignment
+	for (auto I3 = Data.begin(); I3 != Data.end(); I3++) {
+		map<int, T*>& Delete_M(*(I3->second));
+		Delete_M.clear();
+	}
+	Data.clear();
+	for (auto I = R.Data.begin(); I != R.Data.end(); I++) {
+		Data.insert(make_pair(I->first, I->second));
+	}
+	R.Data.clear();
+	cout << "Move assignment" << endl;
+}
+
+template <class T> Record<T>::Record(Record<T>&& R) {//Move Constructor
+	for (auto I = R.Data.begin(); I != R.Data.end(); I++) {
+		Data.insert(make_pair(I->first, I->second));
+	}
+	R.Data.clear();
+	cout << "Move constructor" << endl;
+}
+
+template<class T> Record<T> Record<T>::deleteFirst() {//DeleteFirst
+	Record<T> temp{*this};
+	auto I = temp.Data.begin();
+	temp.Data.erase(I);
+	cout << "Deletefirst" << endl;
+	return temp;
+}
+
+template<class T> Record<T>::~Record() {//Destructor
+	for (auto I3 = Data.begin(); I3 != Data.end(); I3++) {
+		map<int, T*>& Delete_M(*(I3->second));
+		Delete_M.clear();
+	}
+	Data.clear();
+	cout << "Destructor" << endl;
+}
+template <class T> void Record<T>::operator=(const Record<T>& R) {//Copy Assignment
+	if (this == &R) { cout << "Copy Assignment" << endl; return; }
+	for (auto I3 = Data.begin(); I3 != Data.end(); I3++) {
+		map<int, T*>& Delete_M(*(I3->second));
+		Delete_M.clear();
+	}
+	Data.clear();
+	for (auto I = R.Data.begin(); I != R.Data.end(); I++) {
+		Data.insert(make_pair(I->first, new(map<int, T*>)));
+		map<int, T*>& M(*Data[I->first]);
+		map<int, T*>& Original_M(*(I->second));
+		for (auto I2 = Original_M.begin(); I2 != Original_M.end(); I2++) {
+			M.insert(make_pair(I2->first, I2->second));
+		}
+	}
+	cout << "Copy Assignment" << endl;
+}
+
+template <class T> Record<T>::Record(const Record<T>& R) {    //Copy constructor
+	for (auto I = R.Data.begin(); I != R.Data.end(); I++) {
+		Data.insert(make_pair(I->first, new(map<int, T*>)));
+		map<int, T*>& M(*Data[I->first] );
+		map<int, T*>& Original_M(*(I->second));
+		for (auto I2 = Original_M.begin(); I2 != Original_M.end(); I2++) {
+			M.insert(make_pair(I2->first, I2->second));
+		}
+	}
+	cout << "Copy constructor" << endl;
+}
+template <class T> Record<T>::Record(const initializer_list < pair<int, initializer_list<pair <int, T>>>>& I) {
+	for (auto iter1 = I.begin(); iter1 != I.end(); iter1++) {
+		Data.insert(make_pair(iter1->first, new(map<int, T*>)));
+		map<int, T*>& M{ *Data[iter1->first] };
+		for (auto iter2 = (iter1->second).begin(); iter2 != (iter1->second).end(); iter2++) {
+			T* temp = new T(iter2->second.name, iter2->second.section, iter2->second.credits, iter2->second.grade);
+			M.insert(make_pair(iter2->first,temp));
+		} 
+	}
+	cout << "Initializer_List" << endl;
+}
+//You need to implement all needed overloaded operator<<
+template <class T> ostream& operator<<(ostream& str, const Record<T>& R);
+ostream& operator<<(ostream& str, const course c);
+
+int main() {
+	course C1("CIS554", 1, 3, "A-"), C2("CSE674", 1, 3, "B+"), C3("MAT296", 8, 4, "A"), C4("WRT205", 5, 3, "A");
+	course C5("CIS351", 2, 3, "A-"), C6("PSY205", 5, 3, "B+"), C7("MAT331", 2, 3, "A"), C8("ECN203", 4, 3, "A");
+
+
+	Record<course> R1{ {10, { {12, C1}, {9, C2}  }},
+		{7, {{8, C3}, {3, C4}, {1, C5}}},{4, {{21, C6}, {15, C7}} } };
+
+	cout << R1 << endl;
+	Record<course> R2{ R1 };
+	cout << R2 << endl;
+
+	Record<course> R3;
+	R3 = R1;
+	cout << R3 << endl;
+
+	R3 = R1.deleteFirst();
+	cout << R3 << endl;
+
+	R3 = R3;
+	cout << R3 << endl;
+
+	return 0;
+}
+
+template <class T> ostream& operator<<(ostream& str, const Record<T>& R) {
+	str << "{";
+	for (auto I = R.Data.begin(); I != R.Data.end(); I++) {
+		str << " "<<I->first;
+		map<int, T*>& Original_M(*(I->second));
+		str <<" "<< "{"<<" ";
+		for (auto I2 = Original_M.begin(); I2 != Original_M.end(); I2++) {
+			str << I2->first;
+			str << *(I2->second);
+			
+		}
+		str << "}" << " ";
+	}
+	str << "}"<<" ";
+	return str;
+}
+
+ostream& operator<<(ostream& str, const course c) {
+	str <<" " << "(";
+	str << c.name<<" ";
+	str << c.section<<" ";
+	str << c.credits<<" ";
+	str << c.grade<<" ";
+	str << ")"<<"  ";
+	return str;
+}
+
+
